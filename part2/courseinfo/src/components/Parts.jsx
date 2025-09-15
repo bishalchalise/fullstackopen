@@ -1,5 +1,3 @@
-import React from "react";
-
 const Parts = ({ course }) => {
   return course.parts.map((part) => {
     return (

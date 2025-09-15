@@ -1,5 +1,4 @@
 import Course from "./components/Course";
-import Title from "./components/Title";
 
 const App = () => {
   const courses = [
