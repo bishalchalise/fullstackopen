@@ -3,6 +3,7 @@ import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
 import axios from "axios";
+import personsService from "./services/persons";
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
@@ -10,27 +11,32 @@ const App = () => {
   const [filteredName, setFilteredName] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:3001/persons").then((response) => {
-      setPersons(response.data);
-    });
+    personsService
+      .getAll()
+      .then((initialPersons) => setPersons(initialPersons));
   }, []);
 
-  const handleForm = async (event) => {
+  const handleForm = (event) => {
     event.preventDefault();
     const exists = persons.some((person) => person.name === newName);
     if (exists || !newName || !newNumber) {
       alert(`${newName} is already added to phonebook`);
-
       return;
     }
     const personObject = {
       name: newName,
       number: newNumber,
+      // id: String(persons.length + 1),
     };
 
-    setPersons(persons.concat(personObject));
-    setNewName("");
-    setNewNumber("");
+    axios
+      .post("http://localhost:3001/persons", personObject)
+      .then((repsonse) => {
+        setPersons(persons.concat(repsonse.data));
+        setNewName("");
+        setNewNumber("");
+        console.log(repsonse);
+      });
   };
   const handleNameChange = (event) => {
     setNewName(event.target.value);
@@ -43,6 +49,16 @@ const App = () => {
     setFilteredName(event.target.value);
   };
 
+  const handleDelete = (id) => {
+    const person = persons.find((p) => p.id === id);
+    if (window.confirm(`Delete ${person.name} ?`)) {
+      personsService.deletePerson(id).then((deletedPerson) => {
+        setPersons(persons.filter((person) => person.id !== deletedPerson.id));
+      });
+    } else {
+      return;
+    }
+  };
   return (
     <div>
       <h2>Phonebook</h2>
@@ -57,7 +73,11 @@ const App = () => {
       />
       <h3>Numbers</h3>
 
-      <Persons persons={persons} filteredName={filteredName} />
+      <Persons
+        handleDelete={handleDelete}
+        persons={persons}
+        filteredName={filteredName}
+      />
     </div>
   );
 };
