@@ -18,25 +18,68 @@ const App = () => {
 
   const handleForm = (event) => {
     event.preventDefault();
-    const exists = persons.some((person) => person.name === newName);
-    if (exists || !newName || !newNumber) {
-      alert(`${newName} is already added to phonebook`);
-      return;
+    const personExisting = persons.find((person) => person.name === newName);
+    const changedNumber = {
+      ...personExisting,
+      number: newNumber,
+    };
+    if (personExisting) {
+      if (
+        window.confirm(
+          `${personExisting.name} is already added to the phonebook, replace the old number with the new one?`
+        )
+      ) {
+        personsService
+          .updateNumber(personExisting.id, changedNumber)
+          .then((returnedPerson) => {
+            setPersons(
+              persons.map((person) =>
+                person.id !== personExisting.id ? person : returnedPerson
+              )
+            );
+          })
+          .catch((error) => {
+            console.log(personExisting.name);
+            alert(`${personExisting.name} was already deleted from server`);
+            setPersons(persons.filter((n) => n.id !== personExisting.id));
+            console.log(error.toString());
+          });
+        setNewNumber("");
+        setNewName("");
+        return;
+      }
     }
     const personObject = {
       name: newName,
       number: newNumber,
-      // id: String(persons.length + 1),
     };
 
-    axios
-      .post("http://localhost:3001/persons", personObject)
-      .then((repsonse) => {
-        setPersons(persons.concat(repsonse.data));
-        setNewName("");
-        setNewNumber("");
-        console.log(repsonse);
-      });
+    personsService.create(personObject).then((createdPerson) => {
+      setPersons(persons.concat(createdPerson));
+      setNewName("");
+      setNewNumber("");
+    });
+  };
+
+  const handleDelete = (id) => {
+    const selectedPerson = persons.find((p) => p.id === id);
+    if (window.confirm(`Delete ${selectedPerson.name} ?`)) {
+      personsService
+        .deletePerson(id)
+        .then((deletedPerson) => {
+          setPersons(
+            persons.filter((person) => person.id !== deletedPerson.id)
+          );
+        })
+        .catch((error) => {
+          console.log(selectedPerson.name);
+          alert(`${selectedPerson.name} was already deleted from server`);
+          setPersons(persons.filter((p) => p.id !== id));
+          console.log(error.toString());
+        });
+    } else {
+      return;
+    }
   };
   const handleNameChange = (event) => {
     setNewName(event.target.value);
@@ -49,16 +92,6 @@ const App = () => {
     setFilteredName(event.target.value);
   };
 
-  const handleDelete = (id) => {
-    const person = persons.find((p) => p.id === id);
-    if (window.confirm(`Delete ${person.name} ?`)) {
-      personsService.deletePerson(id).then((deletedPerson) => {
-        setPersons(persons.filter((person) => person.id !== deletedPerson.id));
-      });
-    } else {
-      return;
-    }
-  };
   return (
     <div>
       <h2>Phonebook</h2>
