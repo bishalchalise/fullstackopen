@@ -4,11 +4,15 @@ import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
 import axios from "axios";
 import personsService from "./services/persons";
+import Notifications from "./components/Notifications";
+import "./index.css";
 const App = () => {
-  const [persons, setPersons] = useState([]);
+  const [persons, setPersons] = useState(null);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filteredName, setFilteredName] = useState("");
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(true);
 
   useEffect(() => {
     personsService
@@ -16,6 +20,16 @@ const App = () => {
       .then((initialPersons) => setPersons(initialPersons));
   }, []);
 
+  if (!persons) {
+    return null;
+  }
+
+  const setTimer = (sucess) => {
+    setSuccessMessage(sucess);
+    setTimeout(() => {
+      setErrorMessage(null);
+    }, 5000);
+  };
   const handleForm = (event) => {
     event.preventDefault();
     const personExisting = persons.find((person) => person.name === newName);
@@ -37,15 +51,23 @@ const App = () => {
                 person.id !== personExisting.id ? person : returnedPerson
               )
             );
+            setErrorMessage(`Number of ${returnedPerson.name} updated`);
+            setTimeout(() => {
+              setErrorMessage(null);
+            }, 5000);
           })
           .catch((error) => {
-            console.log(personExisting.name);
-            alert(`${personExisting.name} was already deleted from server`);
+            setSuccessMessage(false);
+            setErrorMessage(
+              `${personExisting.name} was already deleted from server`
+            );
+
             setPersons(persons.filter((n) => n.id !== personExisting.id));
-            console.log(error.toString());
           });
         setNewNumber("");
         setNewName("");
+        return;
+      } else {
         return;
       }
     }
@@ -58,6 +80,8 @@ const App = () => {
       setPersons(persons.concat(createdPerson));
       setNewName("");
       setNewNumber("");
+      setErrorMessage(`Added ${createdPerson.name}`);
+      setTimer(true);
     });
   };
 
@@ -70,12 +94,16 @@ const App = () => {
           setPersons(
             persons.filter((person) => person.id !== deletedPerson.id)
           );
+          setErrorMessage(`${deletedPerson.name} Sucessfully deleted`);
+          setTimer(true);
         })
         .catch((error) => {
-          console.log(selectedPerson.name);
-          alert(`${selectedPerson.name} was already deleted from server`);
+          setErrorMessage(
+            `${selectedPerson.name} was already deleted from server`
+          );
+
           setPersons(persons.filter((p) => p.id !== id));
-          console.log(error.toString());
+          setTimer(false);
         });
     } else {
       return;
@@ -95,6 +123,10 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notifications
+        className={successMessage ? "successMessage" : "error"}
+        message={errorMessage}
+      />
       <Filter value={filteredName} onChange={handleFilter} />
       <h3>Add a new</h3>
       <PersonForm
