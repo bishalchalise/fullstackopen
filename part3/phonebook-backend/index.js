@@ -1,4 +1,5 @@
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
 
 let persons = [
@@ -23,7 +24,14 @@ let persons = [
     number: "39-23-6423122",
   },
 ];
+
 app.use(express.json());
+morgan.token("body", (request) => {
+  return JSON.stringify(request.body);
+});
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :body")
+);
 
 app.get("/info", (request, response) => {
   const now = new Date();
@@ -31,6 +39,7 @@ app.get("/info", (request, response) => {
     <p>Phonebook has info for ${persons.length} people</p>
     <p>${now}
     </div>`);
+  ß;
 });
 //get all persons
 app.get("/api/persons", (request, response) => {
@@ -43,7 +52,12 @@ app.get("/api/persons/:id", (request, response) => {
   if (person) {
     response.json(person);
   } else {
-    response.status(404).end();
+    response
+      .status(404)
+      .json({
+        error: "invalid Id",
+      })
+      .end();
   }
 });
 
@@ -84,6 +98,12 @@ app.post("/api/persons", (request, response) => {
   persons = persons.concat(person);
   response.json(person);
 });
+
+const unknownEndpoint = (request, response) => {
+  return response.status(404).send({ error: "unknown endpoint" });
+};
+
+app.use(unknownEndpoint);
 
 const PORT = 3001;
 app.listen(PORT, () => {
