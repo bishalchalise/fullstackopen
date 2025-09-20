@@ -13,17 +13,13 @@ const getCountryInfo = (countryName) => {
   return request.then((response) => response.data);
 };
 const getCountryWeather = (city) => {
-  const request = axios.get(
-    weather_url,
-
-    {
-      params: {
-        q: city,
-        appid: api_key,
-        units: "metric",
-      },
-    }
-  );
+  const request = axios.get(weather_url, {
+    params: {
+      q: city,
+      appid: api_key,
+      units: "metric",
+    },
+  });
 
   return request.then((res) => res.data);
 };
