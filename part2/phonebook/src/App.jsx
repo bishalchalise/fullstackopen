@@ -85,16 +85,19 @@ const App = () => {
     });
   };
 
+  //handle delete
   const handleDelete = (id) => {
     const selectedPerson = persons.find((p) => p.id === id);
-    if (window.confirm(`Delete ${selectedPerson.name} ?`)) {
+    const ok = window.confirm(`Delete ${selectedPerson.name} ?`);
+    if (ok) {
       personsService
         .deletePerson(id)
-        .then((deletedPerson) => {
+        .then(() => {
           setPersons(
-            persons.filter((person) => person.id !== deletedPerson.id)
+            persons.filter((person) => person.id !== selectedPerson.id)
           );
-          setErrorMessage(`${deletedPerson.name} Sucessfully deleted`);
+
+          setErrorMessage(`${selectedPerson.name} Sucessfully deleted`);
           setTimer(true);
         })
         .catch((error) => {
@@ -105,10 +108,9 @@ const App = () => {
           setPersons(persons.filter((p) => p.id !== id));
           setTimer(false);
         });
-    } else {
-      return;
     }
   };
+
   const handleNameChange = (event) => {
     setNewName(event.target.value);
   };
