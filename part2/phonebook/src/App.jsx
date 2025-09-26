@@ -33,7 +33,8 @@ const App = () => {
   const handleForm = (event) => {
     event.preventDefault();
     const personExisting = persons.find(
-      (person) => person.name.toLowerCase() === newName.toLowerCase()
+      (person) =>
+        person.name.toLowerCase().trim() === newName.toLowerCase().trim()
     );
     const changedNumber = {
       ...personExisting,
@@ -53,18 +54,16 @@ const App = () => {
                 person.id !== personExisting.id ? person : returnedPerson
               )
             );
+            setSuccessMessage(true);
             setErrorMessage(`Number of ${returnedPerson.name} updated`);
             setTimeout(() => {
               setErrorMessage(null);
             }, 5000);
           })
           .catch((error) => {
-            setSuccessMessage(false);
-            setErrorMessage(
-              `${personExisting.name} was already deleted from server`
-            );
-
-            setPersons(persons.filter((n) => n.id !== personExisting.id));
+            console.log(error);
+            setTimer(false);
+            setErrorMessage(error.response.data.error);
           });
         setNewNumber("");
         setNewName("");
@@ -78,13 +77,19 @@ const App = () => {
       number: newNumber,
     };
 
-    personsService.create(personObject).then((createdPerson) => {
-      setPersons(persons.concat(createdPerson));
-      setNewName("");
-      setNewNumber("");
-      setErrorMessage(`Added ${createdPerson.name}`);
-      setTimer(true);
-    });
+    personsService
+      .create(personObject)
+      .then((createdPerson) => {
+        setPersons(persons.concat(createdPerson));
+        setNewName("");
+        setNewNumber("");
+        setErrorMessage(`Added ${createdPerson.name}`);
+        setTimer(true);
+      })
+      .catch((error) => {
+        setTimer(false);
+        setErrorMessage(error.response.data.error);
+      });
   };
 
   //handle delete
@@ -103,12 +108,12 @@ const App = () => {
           setTimer(true);
         })
         .catch((error) => {
+          setTimer(false);
           setErrorMessage(
             `${selectedPerson.name} was already deleted from server`
           );
 
           setPersons(persons.filter((p) => p.id !== id));
-          setTimer(false);
         });
     }
   };
