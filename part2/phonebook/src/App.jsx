@@ -32,7 +32,9 @@ const App = () => {
   };
   const handleForm = (event) => {
     event.preventDefault();
-    const personExisting = persons.find((person) => person.name === newName);
+    const personExisting = persons.find(
+      (person) => person.name.toLowerCase() === newName.toLowerCase()
+    );
     const changedNumber = {
       ...personExisting,
       number: newNumber,
